@@ -12,7 +12,7 @@ using namespace metal;
 #define MAX_STEP 10
 #define MAX_DISTANCE 2.0f
 #define EPSILON 1e-6f
-#define N 64
+#define N 32
 
 vertex
 float4 basic_vertex(const device
@@ -22,27 +22,52 @@ float4 basic_vertex(const device
 }
 
 // 随机数
-//
+// 从这抄的： https://thebookofshaders.com/10/
 float rand (float2 st) {
-    return fract(sin(dot(st.xy,
+    return fract(sin(dot(st,
                          float2(12.9898, 78.233)))*
                  43758.5453123);
 }
 
-// 一个圆形光源
-float circleSDF(float x, float y, float cx, float cy, float r) {
-    float ux = x - cx, uy = y - cy;
-    return sqrt(ux * ux + uy * uy) - r;
+// 定义一个光源
+typedef struct LightSource {
+    // 光源距离
+    float sourceDistance;
+    // 光(头)强
+    float emissive;
+} LightSource;
+
+// 合并两个LightSource
+LightSource unionOp(LightSource a, LightSource b) {
+    return a.sourceDistance < b.sourceDistance ? a : b;
 }
+
+// 一个圆形光源
+float circleSDF(float2 xy, float2 center, float radius) {
+    float2 u = xy - center;
+    return sqrt(u.x * u.x + u.y * u.y) - radius;
+}
+
+// 场景
+// 参数为对xy进行采样
+LightSource scene(float2 xy) {
+    // 一次画3圆
+    LightSource r1 = { circleSDF(xy, float2(0.3f, 0.3f), 0.10f), 2.0f };
+    LightSource r2 = { circleSDF(xy, float2(0.3f, 0.7f), 0.05f), 0.8f };
+    LightSource r3 = { circleSDF(xy, float2(0.7f, 0.5f), 0.10f), 0.0f };
+    
+    return unionOp(unionOp(r1, r2), r3);
+}
+
 
 // 函数代表从 o 位置从单位矢量 d 方向接收到的光。
 float trace(float2 o, float2 d) {
     float t = 0.0f;
     for (int i = 0; i < MAX_STEP && t < MAX_DISTANCE; i++) {
-        float sd = circleSDF(o.x + d.x * t, o.y + d.y * t, .5f, .5f, 0.1f);
-        if (sd < EPSILON)
-            return 2.0f;
-        t += sd;
+        LightSource sd = scene(d * t + o);
+        if (sd.sourceDistance < EPSILON)
+            return sd.emissive;
+        t += sd.sourceDistance;
     }
     return 0.0f;
 }
@@ -63,6 +88,6 @@ float4 basic_fragment(float2 pointCoord [[point_coord]],
                       float4 position [[position]]) {
     const float W = 360;
     float2 xy = position.xy / W;
-    float gray = min(sample(xy), 1.0f);
-    return float4(0, gray, 0, 1);
+    float gray = 1 - min(sample(xy), 1.0f);
+    return float4(gray, gray, gray, 1);
 }
