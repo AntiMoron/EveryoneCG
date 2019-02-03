@@ -6,7 +6,7 @@
   "private": false,
   "scripts": {
     "build": "node ./scripts/build.js",
-    "start": "sh ./run.sh",
+    "start": "rimraf ./dist/* && npm-run-all --parallel dev:examples serve",
     "dev:examples": "webpack --watch --config ./scripts/configs/webpack.config.dev.js",
     "serve": "serve ./ -p 3332"
   },
@@ -18,8 +18,10 @@
     "@babel/preset-env": "^7.3.1",
     "babel-loader": "^8.0.5",
     "chalk": "^2.4.2",
+    "npm-run-all": "^4.1.5",
     "os": "^0.1.1",
     "path": "^0.12.7",
+    "rimraf": "^2.6.3",
     "serve": "^10.1.1",
     "webpack": "^4.29.0",
     "webpack-cli": "^3.2.1",
