@@ -2,6 +2,7 @@ import { addf2, mulf2 } from '../util/float2';
 import { Circle } from '../sdf/circle';
 import { Rect } from '../sdf/rect';
 import { Plane } from '../sdf/plane';
+import { debug } from 'util';
 
 let N = 16;
 let MAX_STEP = 5;
@@ -15,7 +16,6 @@ let BIAS = 1e-4;
  * @param {*} o
  */
 function adaptSDF(xy, o) {
-    if(!o) { debugger}
     const {
         _opQueue: queue
     } = o;

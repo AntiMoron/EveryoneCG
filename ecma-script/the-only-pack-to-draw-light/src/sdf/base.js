@@ -67,9 +67,10 @@ export class SDF {
             ...this._props,
             sourceDistance: this.getSourceDistance(xy)
         }
-        return {
-            ...new LightSource(),
-            ...props,
-        };
+        const ls = new LightSource();
+        for(const key in props) {
+            ls[key] = props[key];
+        }
+        return ls;
     }
 }
