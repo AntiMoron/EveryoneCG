@@ -1,0 +1,32 @@
+{
+  "name": "the-only-one-pack-to-draw-light",
+  "version": "1.0.0",
+  "description": "你需要的唯一的一个包去CPU画光，[有卡爆风险]",
+  "main": "dist/index.min.js",
+  "private": false,
+  "scripts": {
+    "build": "node ./scripts/build.js",
+    "start": "sh ./run.sh",
+    "dev:examples": "webpack --watch --config ./scripts/configs/webpack.config.dev.js",
+    "serve": "serve ./ -p 3332"
+  },
+  "author": "anti2moron@gmail.com",
+  "license": "GPL",
+  "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/plugin-proposal-class-properties": "^7.3.0",
+    "@babel/preset-env": "^7.3.1",
+    "babel-loader": "^8.0.5",
+    "chalk": "^2.4.2",
+    "os": "^0.1.1",
+    "path": "^0.12.7",
+    "serve": "^10.1.1",
+    "webpack": "^4.29.0",
+    "webpack-cli": "^3.2.1",
+    "webpack-merge": "^4.2.1",
+    "webpack-uglify-parallel": "^0.1.4"
+  },
+  "files": [
+    "dist"
+  ]
+}
