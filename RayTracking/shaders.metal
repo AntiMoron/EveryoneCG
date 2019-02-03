@@ -9,10 +9,19 @@
 #include <metal_stdlib>
 using namespace metal;
 
-#define MAX_STEP 10
-#define MAX_DISTANCE 2.0f
+#define MAX_STEP 64
+#define MAX_DISTANCE 5.0f
 #define EPSILON 1e-6f
 #define N 64
+
+// 函数代表从 o 位置从单位矢量 d 方向接收到的光。
+// 反射递归次数为3次
+#define MAX_DEPTH 3
+// Quote:
+// 另外，由于我们要向反射方向追踪，如果用原来的相交点，追踪时就为立即遇到 \texttt{r.sd < EPSILON} 而停止，
+// 所以我们稍微把相交点往法线方向偏移 \texttt{BIAS} 的距离，只要 \texttt{BIAS} > \texttt{EPSILON} ，
+// 就可以避免这个问题。但太大的话也会造成误差
+#define BIAS 1e-4f
 
 vertex
 float4 basic_vertex(const device
@@ -38,6 +47,9 @@ typedef struct LightSource {
     // 反射率
     // 如果反射率超过 1，总能量就变多，不符合能量守恒。少于 1 代表形状吸收了能量。
     float reflectivity;
+    // 介质折射率
+    // 如果光线从外至内，调用 \texttt{refract()} 时，传入 1 / \eta ；从内至外则传入 \eta 。
+    float eta;
 } LightSource;
 
 // 合并两个LightSource
@@ -74,17 +86,38 @@ float boxSDF(float2 xy, float2 center, float theta, float2 s) {
     return min(max(dx, dy), 0.0f) + sqrt(ax * ax + ay * ay);
 }
 
+// 抄这个 https://github.com/miloyip/light2d/blob/master/refraction.c
+float planeSDF(float2 xy, float2 pxy, float2 normal) {
+    return (xy.x - pxy.x) * normal.x + (xy.y - pxy.y) * normal.y;
+}
+
 // 场景
 // 参数为对xy进行采样
 LightSource scene(float2 xy) {
-    // 一次画3圆
-    LightSource r1 = { circleSDF(xy, float2(0.4f, 0.5f), 0.01f), 4.0f, 0 };
-    LightSource r2 = { circleSDF(xy, float2(0.6f, 0.5f), 0.01f), 4.0f, 0 };
-//    LightSource r3 = { circleSDF(xy, float2(0.7f, 0.5f), 0.10f), 0.0f, .3 };
-    LightSource box = {boxSDF(xy, float2(0.3f,  0.3f), 0, float2(0.1f, 0.1f)), 0.3f, 0.9f};
-    LightSource box2 = {boxSDF(xy, float2(0.7f,  0.3f), 0, float2(0.1f, 0.1f)), 0.3f, 0.9f};
-    return unionOp(unionOp(unionOp(r1, r2), box), box2);
+//    // 一次画3圆
+//    LightSource r1 = { circleSDF(xy, float2(0.4f, 0.5f), 0.01f), 4.0f, 0, 0 };
+//    LightSource r2 = { circleSDF(xy, float2(0.6f, 0.5f), 0.01f), 4.0f, 0, 0 };
+////    LightSource r3 = { circleSDF(xy, float2(0.7f, 0.5f), 0.10f), 0.0f, .3 };
+//    LightSource box = {boxSDF(xy, float2(0.3f,  0.3f), 0, float2(0.1f, 0.1f)), 0, 0.9f, 1.5};
+////    LightSource box2 = {boxSDF(xy, float2(0.7f,  0.3f), 0, float2(0.1f, 0.1f)), 0, 0.9f, 1.5};
+//    return unionOp(unionOp(r1, r2), box);
+//    return unionOp(unionOp(unionOp(r1, r2), box), box2);
 //    return unionOp(unionOp(unionOp(unionOp(r1, r2), r3), box), box2);
+    LightSource a = { circleSDF(xy, float2(-0.2f, -0.2f), 0.1f), 10.0f, 0.0f, 0.0f };
+    LightSource b = {    boxSDF(xy, float2(0.5f, 0.5f), 0.0f, float2(0.3, 0.2f)), 0.0f, 0.9f, 1.5f };
+    LightSource c = { circleSDF(xy, float2(0.5f, -0.5f), 0.05f), 20.0f, 0.0f, 0.0f };
+    LightSource d = { circleSDF(xy, float2(0.5f, 0.2f), 0.35f), 0.0f, 0.2f, 1.5f };
+    LightSource e = { circleSDF(xy, float2(0.5f, 0.8f), 0.35f), 0.0f, 0.2f, 1.5f };
+    LightSource f = {    boxSDF(xy, float2(0.5f, 0.5f), 0.0f, float2(0.2, 0.1f)), 0.0f, 0.2f, 1.5f };
+    LightSource g = { circleSDF(xy, float2(0.5f, 0.12f), 0.35f), 0.0f, 0.2f, 1.5f };
+    LightSource h = { circleSDF(xy, float2(0.5f, 0.87f), 0.35f), 0.0f, 0.2f, 1.5f };
+    LightSource i = { circleSDF(xy, float2(0.5f, 0.5f), 0.2f), 0.0f, 0.2f, 1.5f };
+    LightSource j = {  planeSDF(xy, float2(0.5f, 0.5f), float2(0.0f, -1.0f)), 0.0f, 0.2f, 1.5f };
+//     return unionOp(a, b);
+    // return unionOp(c, intersectOp(d, e));
+    // return unionOp(c, subtractOp(f, unionOp(g, h)));
+    return unionOp(c, intersectOp(i, j));
+    
 }
 
 // 说是计算法线
@@ -95,30 +128,20 @@ float2 gradient(float2 xy) {
                    - scene(float2(xy.x, xy.y - EPSILON)).sourceDistance) * (0.5f / EPSILON));
 }
 
-// reflect 是个函数
-float2 reflection(float2 xy, float2 normal) {
-    return reflect(xy, normalize(normal));
-}
-
-
-// 函数代表从 o 位置从单位矢量 d 方向接收到的光。
-// 反射递归次数为3次
-#define MAX_DEPTH 3
-// Quote:
-// 另外，由于我们要向反射方向追踪，如果用原来的相交点，追踪时就为立即遇到 \texttt{r.sd < EPSILON} 而停止，
-// 所以我们稍微把相交点往法线方向偏移 \texttt{BIAS} 的距离，只要 \texttt{BIAS} > \texttt{EPSILON} ，
-// 就可以避免这个问题。但太大的话也会造成误差
-#define BIAS 1e-7
 
 float trace0(float2 o, float2 d) {
     float t = 0.0f;
+    // 判断是场景内还是外，间eta注释
+    float sign = scene(o).sourceDistance > 0.0f ? 1.0f : -1.0f;
     for (int i = 0; i < MAX_STEP && t < MAX_DISTANCE; i++) {
         float2 xy = d * t + o;
         LightSource sd = scene(xy);
-        if (sd.sourceDistance < EPSILON) {
-            return sd.emissive;
+        if (sd.sourceDistance * sign < EPSILON) {
+            // 反射
+            float sum = sd.emissive;
+            return sum;
         }
-        t += sd.sourceDistance;
+        t += sd.sourceDistance * sign;
     }
     return 0.0f;
 }
@@ -126,16 +149,28 @@ float trace0(float2 o, float2 d) {
 
 float trace1(float2 o, float2 d) {
     float t = 0.0f;
+    // 判断是场景内还是外，间eta注释
+    float s = scene(o).sourceDistance > 0.0f ? 1.0f : -1.0f;
     for (int i = 0; i < MAX_STEP && t < MAX_DISTANCE; i++) {
         float2 xy = d * t + o;
         LightSource sd = scene(xy);
+        sd.sourceDistance *= s;
         if (sd.sourceDistance < EPSILON) {
             // 反射
             float sum = sd.emissive;
-            if (sd.reflectivity > 0.0f) {
+            float refl = sd.reflectivity;
+            if (sd.reflectivity > 0.0f || sd.eta > 0) {
                 float2 normal = gradient(xy);
-                float2 refl = reflection(d, normal);
-                sum += sd.reflectivity * trace0(xy + normal * BIAS, refl);
+//                normal *= sign;// 在内的话，要反转法线
+                normal = normalize(normal);
+                if (sd.eta > 0.0f) {
+                    float2 etaRange = refract(d, normal, s < 0.0f ? sd.eta : 1.0f / sd.eta);
+                    sum += (1.0f - refl) * trace0(xy - normal * BIAS, etaRange);
+                }
+                if (refl > 0.0f) {
+                    float2 refl2 = reflect(d, normal);
+                    sum += refl * trace0(xy + normal * BIAS, refl2);
+                }
             }
             return sum;
         }
@@ -144,19 +179,30 @@ float trace1(float2 o, float2 d) {
     return 0.0f;
 }
 
-
 float trace2(float2 o, float2 d) {
     float t = 0.0f;
+    // 判断是场景内还是外，间eta注释
+    float s = scene(o).sourceDistance > 0.0f ? 1.0f : -1.0f;
     for (int i = 0; i < MAX_STEP && t < MAX_DISTANCE; i++) {
         float2 xy = d * t + o;
         LightSource sd = scene(xy);
+        sd.sourceDistance *= s;
         if (sd.sourceDistance < EPSILON) {
             // 反射
             float sum = sd.emissive;
-            if (sd.reflectivity > 0.0f) {
+            float refl = sd.reflectivity;
+            if (sd.reflectivity > 0.0f || sd.eta > 0) {
                 float2 normal = gradient(xy);
-                float2 refl = reflection(d, normal);
-                sum += sd.reflectivity * trace1(xy + normal * BIAS, refl);
+                normal *= s;// 在内的话，要反转法线
+                normal = normalize(normal);
+                if (sd.eta > 0.0f) {
+                    float2 etaRange = refract(d, normal, s < 0.0f ? sd.eta : 1.0f / sd.eta);
+                    sum += (1.0f - refl) * trace1(xy - normal * BIAS, etaRange);
+                }
+                if (refl > 0.0f) {
+                    float2 refl2 = reflect(d, normal);
+                    sum += refl * trace1(xy + normal * BIAS, refl2);
+                }
             }
             return sum;
         }
@@ -168,16 +214,28 @@ float trace2(float2 o, float2 d) {
 // WTM... shader里不能写递归
 float trace(float2 o, float2 d) {
     float t = 0.0f;
+    // 判断是场景内还是外，间eta注释
+    float s = scene(o).sourceDistance > 0.0f ? 1.0f : -1.0f;
     for (int i = 0; i < MAX_STEP && t < MAX_DISTANCE; i++) {
         float2 xy = d * t + o;
         LightSource sd = scene(xy);
+        sd.sourceDistance *= s;
         if (sd.sourceDistance < EPSILON) {
             // 反射
             float sum = sd.emissive;
-            if (sd.reflectivity > 0.0f) {
+            float refl = sd.reflectivity;
+            if (sd.reflectivity > 0.0f || sd.eta > 0) {
                 float2 normal = gradient(xy);
-                float2 refl = reflection(d, normal);
-                sum += sd.reflectivity * trace2(xy + normal * BIAS, refl);
+                normal *= s;// 在内的话，要反转法线
+                normal = normalize(normal);
+                if (sd.eta > 0.0f) {
+                    float2 etaRange = refract(d, normal, s < 0.0f ? sd.eta : 1.0f / sd.eta);
+                    sum += (1.0f - refl) * trace2(xy - normal * BIAS, etaRange);
+                }
+                if (refl > 0.0f) {
+                    float2 refl2 = reflect(d, normal);
+                    sum += refl * trace2(xy + normal * BIAS, refl2);
+                }
             }
             return sum;
         }
