@@ -1,12 +1,8 @@
 import { addf2, mulf2 } from '../util/float2';
-import { Circle } from '../sdf/circle';
-import { Rect } from '../sdf/rect';
-import { Plane } from '../sdf/plane';
-import { debug } from 'util';
 
-let N = 16;
-let MAX_STEP = 5;
-let MAX_DISTANCE = 2.0;
+let N = 32;
+let MAX_STEP = 10;
+let MAX_DISTANCE = 4.0;
 let EPSILON = 1e-6;
 let BIAS = 1e-4;
 

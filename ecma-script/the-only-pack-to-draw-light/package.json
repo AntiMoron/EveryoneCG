@@ -1,6 +1,6 @@
 {
   "name": "the-only-one-pack-to-draw-light",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "你需要的唯一的一个包去CPU画光，[有卡爆风险]",
   "main": "dist/index.min.js",
   "private": false,
