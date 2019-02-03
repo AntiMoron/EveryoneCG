@@ -93,7 +93,7 @@ float planeSDF(float2 xy, float2 pxy, float2 normal) {
 
 // 场景
 // 参数为对xy进行采样
-LightSource scene(float2 xy) {
+LightSource scene(float2 xy, float rgbRefra) {
 //    // 一次画3圆
 //    LightSource r1 = { circleSDF(xy, float2(0.4f, 0.5f), 0.01f), 4.0f, 0, 0 };
 //    LightSource r2 = { circleSDF(xy, float2(0.6f, 0.5f), 0.01f), 4.0f, 0, 0 };
@@ -111,8 +111,8 @@ LightSource scene(float2 xy) {
     LightSource f = {    boxSDF(xy, float2(0.5f, 0.5f), 0.0f, float2(0.2, 0.1f)), 0.0f, 0.2f, 1.5f };
     LightSource g = { circleSDF(xy, float2(0.5f, 0.12f), 0.35f), 0.0f, 0.2f, 1.5f };
     LightSource h = { circleSDF(xy, float2(0.5f, 0.87f), 0.35f), 0.0f, 0.2f, 1.5f };
-    LightSource i = { circleSDF(xy, float2(0.5f, 0.5f), 0.2f), 0.0f, 0.2f, 1.5f };
-    LightSource j = {  planeSDF(xy, float2(0.5f, 0.5f), float2(0.0f, -1.0f)), 0.0f, 0.2f, 1.5f };
+    LightSource i = { circleSDF(xy, float2(0.5f, 0.5f), 0.2f), 0.0f, 0.2f, rgbRefra };
+    LightSource j = {  planeSDF(xy, float2(0.5f, 0.5f), float2(0.0f, -1.0f)), 0.0f, 0.2f, rgbRefra };
 //     return unionOp(a, b);
     // return unionOp(c, intersectOp(d, e));
     // return unionOp(c, subtractOp(f, unionOp(g, h)));
@@ -122,20 +122,20 @@ LightSource scene(float2 xy) {
 
 // 说是计算法线
 float2 gradient(float2 xy) {
-    return float2((scene(float2(xy.x + EPSILON, xy.y)).sourceDistance
-                    - scene(float2(xy.x - EPSILON, xy.y)).sourceDistance) * (0.5f / EPSILON),
-                  (scene(float2(xy.x, xy.y + EPSILON)).sourceDistance
-                   - scene(float2(xy.x, xy.y - EPSILON)).sourceDistance) * (0.5f / EPSILON));
+    return float2((scene(float2(xy.x + EPSILON, xy.y), 0).sourceDistance
+                    - scene(float2(xy.x - EPSILON, xy.y), 0).sourceDistance) * (0.5f / EPSILON),
+                  (scene(float2(xy.x, xy.y + EPSILON), 0).sourceDistance
+                   - scene(float2(xy.x, xy.y - EPSILON), 0).sourceDistance) * (0.5f / EPSILON));
 }
 
 
 float trace0(float2 o, float2 d) {
     float t = 0.0f;
     // 判断是场景内还是外，间eta注释
-    float sign = scene(o).sourceDistance > 0.0f ? 1.0f : -1.0f;
+    float sign = scene(o, 0).sourceDistance > 0.0f ? 1.0f : -1.0f;
     for (int i = 0; i < MAX_STEP && t < MAX_DISTANCE; i++) {
         float2 xy = d * t + o;
-        LightSource sd = scene(xy);
+        LightSource sd = scene(xy, 0);
         if (sd.sourceDistance * sign < EPSILON) {
             // 反射
             float sum = sd.emissive;
@@ -147,13 +147,13 @@ float trace0(float2 o, float2 d) {
 }
 
 
-float trace1(float2 o, float2 d) {
+float trace1(float2 o, float2 d, float rfr) {
     float t = 0.0f;
     // 判断是场景内还是外，间eta注释
-    float s = scene(o).sourceDistance > 0.0f ? 1.0f : -1.0f;
+    float s = scene(o, rfr).sourceDistance > 0.0f ? 1.0f : -1.0f;
     for (int i = 0; i < MAX_STEP && t < MAX_DISTANCE; i++) {
         float2 xy = d * t + o;
-        LightSource sd = scene(xy);
+        LightSource sd = scene(xy, rfr);
         sd.sourceDistance *= s;
         if (sd.sourceDistance < EPSILON) {
             // 反射
@@ -179,13 +179,13 @@ float trace1(float2 o, float2 d) {
     return 0.0f;
 }
 
-float trace2(float2 o, float2 d) {
+float trace2(float2 o, float2 d, float rfr) {
     float t = 0.0f;
     // 判断是场景内还是外，间eta注释
-    float s = scene(o).sourceDistance > 0.0f ? 1.0f : -1.0f;
+    float s = scene(o, rfr).sourceDistance > 0.0f ? 1.0f : -1.0f;
     for (int i = 0; i < MAX_STEP && t < MAX_DISTANCE; i++) {
         float2 xy = d * t + o;
-        LightSource sd = scene(xy);
+        LightSource sd = scene(xy, rfr);
         sd.sourceDistance *= s;
         if (sd.sourceDistance < EPSILON) {
             // 反射
@@ -197,11 +197,11 @@ float trace2(float2 o, float2 d) {
                 normal = normalize(normal);
                 if (sd.eta > 0.0f) {
                     float2 etaRange = refract(d, normal, s < 0.0f ? sd.eta : 1.0f / sd.eta);
-                    sum += (1.0f - refl) * trace1(xy - normal * BIAS, etaRange);
+                    sum += (1.0f - refl) * trace1(xy - normal * BIAS, etaRange, rfr);
                 }
                 if (refl > 0.0f) {
                     float2 refl2 = reflect(d, normal);
-                    sum += refl * trace1(xy + normal * BIAS, refl2);
+                    sum += refl * trace1(xy + normal * BIAS, refl2, rfr);
                 }
             }
             return sum;
@@ -212,13 +212,13 @@ float trace2(float2 o, float2 d) {
 }
 
 // WTM... shader里不能写递归
-float trace(float2 o, float2 d) {
+float trace(float2 o, float2 d, float rfr) {
     float t = 0.0f;
     // 判断是场景内还是外，间eta注释
-    float s = scene(o).sourceDistance > 0.0f ? 1.0f : -1.0f;
+    float s = scene(o, rfr).sourceDistance > 0.0f ? 1.0f : -1.0f;
     for (int i = 0; i < MAX_STEP && t < MAX_DISTANCE; i++) {
         float2 xy = d * t + o;
-        LightSource sd = scene(xy);
+        LightSource sd = scene(xy, rfr);
         sd.sourceDistance *= s;
         if (sd.sourceDistance < EPSILON) {
             // 反射
@@ -230,11 +230,11 @@ float trace(float2 o, float2 d) {
                 normal = normalize(normal);
                 if (sd.eta > 0.0f) {
                     float2 etaRange = refract(d, normal, s < 0.0f ? sd.eta : 1.0f / sd.eta);
-                    sum += (1.0f - refl) * trace2(xy - normal * BIAS, etaRange);
+                    sum += (1.0f - refl) * trace2(xy - normal * BIAS, etaRange, rfr);
                 }
                 if (refl > 0.0f) {
                     float2 refl2 = reflect(d, normal);
-                    sum += refl * trace2(xy + normal * BIAS, refl2);
+                    sum += refl * trace2(xy + normal * BIAS, refl2, rfr);
                 }
             }
             return sum;
@@ -245,11 +245,11 @@ float trace(float2 o, float2 d) {
 }
 
 // 采样(x,y)的颜色
-float sample(float2 xy) {
+float sample(float2 xy, float rfr) {
     float sum = 0.0f;
     for (int i = 0; i < N; i++) {
         float a = 6.28 * (i + rand(xy)) / N;
-        sum += trace(xy, float2(cos(a), sin(a)));
+        sum += trace(xy, float2(cos(a), sin(a)), rfr);
     }
     return sum / 64.0;
 }
@@ -260,6 +260,9 @@ float4 basic_fragment(float2 pointCoord [[point_coord]],
                       float4 position [[position]]) {
     const float W = 376;
     float2 xy = position.xy / W;
-    float gray = min(sample(xy), 1.0f);
-    return float4(gray, gray, gray, 1);
+    float r = min(sample(xy, 1.3), 1.0f);
+    float g = min(sample(xy, 1.4), 1.0f);
+    float b = min(sample(xy, 1.5), 1.0f);
+//    return float4(gray, gray, gray, 1);
+    return float4(r, g, b, 1);
 }
