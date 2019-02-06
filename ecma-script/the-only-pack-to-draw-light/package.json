@@ -30,5 +30,8 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "dependencies": {
+    "gl-matrix": "^3.0.0"
+  }
 }
