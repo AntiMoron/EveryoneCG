@@ -29,10 +29,10 @@ export class Plane extends SDF {
                 y: ny
             } = {},
         } = this;
-        return new Float32Array([
+        return [
             2.0, emissive, reflectivity, eta,
             px, py, nx, ny,
-        ]);
+        ];
     }
 }
 

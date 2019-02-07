@@ -1,7 +1,7 @@
 import { OPDrawLight } from './dist/index.min.js';
 
 const {
-    cpu: {
+    gpu: {
         SDF: {
             Circle,
             Plane,

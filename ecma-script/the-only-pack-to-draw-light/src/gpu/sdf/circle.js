@@ -1,5 +1,4 @@
 import { SDF } from './base'
-import { subf2 } from '../util/float2';
 /**
  * 虚拟物体
  * 用于描述一个圆
@@ -17,7 +16,6 @@ export class Circle extends SDF {
         // radius
         this._center = center;
         this._radius = radius;
-        this.getSourceDistance = this.getSourceDistance.bind(this);
     }
 
     get gpuDesc() {
@@ -33,9 +31,9 @@ export class Circle extends SDF {
             } = {},
             _radius: radius
         } = this;
-        return new Float32Array([
+        return [
             1.0, emissive, reflectivity, eta,
             cx, cy, radius, 0
-        ]);
+        ];
     }
 }

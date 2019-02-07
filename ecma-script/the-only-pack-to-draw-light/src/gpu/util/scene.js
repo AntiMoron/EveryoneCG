@@ -35,13 +35,12 @@ export class Scene extends GlBase {
             positionComponentCount, texcoords, texcoordComponentCount);
     }
 
-    rendering() {
+    clear() {
         const gl = this._gl;
         // Set clear color to black, fully opaque
-        gl.clearColor(0.0, 0.0, 0.0, 0.0);
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
         // Clear the color buffer with specified clear color
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-        callback && callback(time);
     }
 
     /**
@@ -82,10 +81,26 @@ export class Scene extends GlBase {
             this._gl.uniform2f(program.structure.uniformLocations.get(SHADER_TEXTURESIZE), textureSize[0], textureSize[1])
         }
         if (otherParam) {
-            for (const key of otherParam.keys()) {
-                const v = otherParam.get(key);
+            for (const key in otherParam) {
+                const v = otherParam[key];
+                let isInteger = false;
+                if (key.charAt(0) === 'i') {
+                    isInteger = true;
+                }
                 if (program.structure.uniformLocations.get(key)) {
-                    this._gl.uniform1f(program.structure.uniformLocations.get(key), v);
+                    if (typeof v === 'number') {
+                        if (isInteger) {
+                            this._gl.uniform1i(program.structure.uniformLocations.get(key), v);
+                        } else {
+                            this._gl.uniform1f(program.structure.uniformLocations.get(key), v);
+                        }
+                    } else if (typeof v === 'object' && Object.prototype.toString.call(v) === '[object Array]') {
+                        if (isInteger) {
+                            this._gl.uniform1iv(program.structure.uniformLocations.get(key), new Int32Array(v));
+                        } else {
+                            this._gl.uniform1fv(program.structure.uniformLocations.get(key), new Float32Array(v));
+                        }
+                    }
                 }
             }
         }

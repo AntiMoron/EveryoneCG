@@ -1,7 +1,7 @@
-import { Circle } from './src/sdf/circle';
-import { Plane } from './src/sdf/plane';
-import { Rect } from './src/sdf/rect';
-import { render } from './src/render';
+import { Circle } from './sdf/circle';
+import { Plane } from './sdf/plane';
+import { Rect } from './sdf/rect';
+import { render } from './render';
 
 export default {
     cpu: {

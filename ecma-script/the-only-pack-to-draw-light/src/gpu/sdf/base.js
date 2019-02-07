@@ -1,5 +1,3 @@
-import { LightSource } from '../light';
-
 /**
  * 虚拟物体
  * 用于跟GPU描述一个物体

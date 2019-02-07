@@ -38,12 +38,12 @@ export class Program extends GlBase {
         }
 
         this._programStructure = {
-            attribLocations: attributeNames.reduce((pre, attrName, _) => {
-                pre.set(attrName, this._glContext.getAttribLocation(this._program, attrName));
+            attribLocations: (attributeNames || []).reduce((pre, attrName, _) => {
+                pre.set(attrName, this._gl.getAttribLocation(this._raw, attrName));
                 return pre;
             }, new Map()),
-            uniformLocations: uniformNames.reduce((pre, unif, _) => {
-                pre.set(unif, this._glContext.getUniformLocation(this._program, unif));
+            uniformLocations: (uniformNames || []).reduce((pre, unif, _) => {
+                pre.set(unif, this._gl.getUniformLocation(this._raw, unif));
                 return pre;
             }, new Map()),
         }

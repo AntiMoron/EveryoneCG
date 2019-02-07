@@ -47,10 +47,10 @@ function scene(xy, objs) {
 // 说是计算法线
 function gradient(xy, objs) {
     return {
-        x: (scene({ x: (xy.x + EPSILON, xy.y), y: 0 }, objs).sourceDistance
-            - scene({ x: (xy.x - EPSILON, xy.y), y: 0 }, objs).sourceDistance) * (0.5 / EPSILON),
-        y: (scene({ x: (xy.x, xy.y + EPSILON), y: 0 }, objs).sourceDistance
-            - scene({ x: (xy.x, xy.y - EPSILON), y: 0 }, objs).sourceDistance) * (0.5 / EPSILON)
+        x: (scene({ x: xy.x + EPSILON, y: xy.y }, objs).sourceDistance
+            - scene({ x: xy.x - EPSILON, y: xy.y }, objs).sourceDistance) * (0.5 / EPSILON),
+        y: (scene({ x: xy.x, y: xy.y + EPSILON }, objs).sourceDistance
+            - scene({ x: xy.x, y: xy.y - EPSILON }, objs).sourceDistance) * (0.5 / EPSILON)
     };
 }
 

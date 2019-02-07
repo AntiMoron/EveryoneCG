@@ -11,7 +11,6 @@ export class Rect extends SDF {
         this._center = center;
         this._theta = theta;
         this._s = s;
-        this.getSourceDistance = this.getSourceDistance.bind(this);
     }
 
     get gpuDesc() {
@@ -31,10 +30,10 @@ export class Rect extends SDF {
             },
             _theta: theta,
         } = this;
-        return new Float32Array([
+        return [
             3.0, emissive, reflectivity, eta,
             cx, cy, sx, sy,
             theta, 0, 0, 0
-        ]);
+        ];
     }
 }
