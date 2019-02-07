@@ -156,7 +156,7 @@ float trace0(vec2 o, vec2 d) {
   // 判断是场景内还是外，间eta注释
   float s = scene(o).sourceDistance > .0 ? 1.0 : -1.0;
   for (int i = 0; i < MAX_STEP; i++) {
-    if(t < MAX_DISTANCE) { break; }
+    if(t >= MAX_DISTANCE) { break; }
     vec2 xy = d * t + o;
     LightSource sd = scene(xy);
     sd.sourceDistance = sd.sourceDistance * s;
@@ -180,7 +180,7 @@ float trace1(vec2 o, vec2 d) {
   // 判断是场景内还是外，间eta注释
   float s = scene(o).sourceDistance > .0 ? 1.0 : -1.0;
   for (int i = 0; i < MAX_STEP; i++) {
-    if(t < MAX_DISTANCE) { break; }
+    if(t >= MAX_DISTANCE) { break; }
     vec2 xy = d * t + o;
     LightSource sd = scene(xy);
     sd.sourceDistance = sd.sourceDistance * s;
@@ -191,7 +191,7 @@ float trace1(vec2 o, vec2 d) {
         if (sd.reflectivity > .0 || sd.eta > .0) {
             vec2 normal = gradient(xy);
             normal = normal * s;// 在内的话，要反转法线
-            // normal = normalize(normal);
+            normal = normalize(normal);
             if (sd.eta > .0) {
                 vec2 etaRange = refract(d, normal, s < .0 ? sd.eta : 1.0 / sd.eta);
                 sum += (1.0 - refl) * trace0(xy - normal * BIAS, etaRange);
@@ -219,7 +219,7 @@ float trace2(vec2 o, vec2 d) {
   // 判断是场景内还是外，间eta注释
   float s = scene(o).sourceDistance > .0 ? 1.0 : -1.0;
   for (int i = 0; i < MAX_STEP; i++) {
-    if(t < MAX_DISTANCE) { break; }
+    if(t >= MAX_DISTANCE) { break; }
     vec2 xy = d * t + o;
     LightSource sd = scene(xy);
     sd.sourceDistance = sd.sourceDistance * s;
@@ -230,7 +230,7 @@ float trace2(vec2 o, vec2 d) {
         if (sd.reflectivity > .0 || sd.eta > .0) {
             vec2 normal = gradient(xy);
             normal = normal * s;// 在内的话，要反转法线
-            // normal = normalize(normal);
+            normal = normalize(normal);
             if (sd.eta > .0) {
                 vec2 etaRange = refract(d, normal, s < .0 ? sd.eta : 1.0 / sd.eta);
                 sum += (1.0 - refl) * trace1(xy - normal * BIAS, etaRange);
@@ -258,7 +258,7 @@ float trace(vec2 o, vec2 d) {
   // 判断是场景内还是外，间eta注释
   float s = scene(o).sourceDistance > .0 ? 1.0 : -1.0;
   for (int i = 0; i < MAX_STEP; i++) {
-    if(t < MAX_DISTANCE) { break; }
+    if(t >= MAX_DISTANCE) { break; }
     vec2 xy = d * t + o;
     LightSource sd = scene(xy);
     sd.sourceDistance = sd.sourceDistance * s;
@@ -269,7 +269,7 @@ float trace(vec2 o, vec2 d) {
         if (sd.reflectivity > .0 || sd.eta > .0) {
             vec2 normal = gradient(xy);
             normal = normal * s;// 在内的话，要反转法线
-            // normal = normalize(normal);
+            normal = normalize(normal);
             if (sd.eta > .0) {
                 vec2 etaRange = refract(d, normal, s < .0 ? sd.eta : 1.0 / sd.eta);
                 sum += (1.0 - refl) * trace2(xy - normal * BIAS, etaRange);
@@ -312,7 +312,7 @@ float sample(vec2 xy) {
 void main(void) {
   float width = ${parseInt(width, 10)}.0;
   float height = ${parseInt(height, 10)}.0;
-  vec2 xy = vec2(gl_FragCoord.x / width, gl_FragCoord.y / height);
+  vec2 xy = vec2(gl_FragCoord.x / width, 1.0 - gl_FragCoord.y / height);
   float gray = sample(xy);
   gl_FragColor = vec4(gray, gray, gray, 1);
 }

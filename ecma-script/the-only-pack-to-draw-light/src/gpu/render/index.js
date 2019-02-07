@@ -136,7 +136,7 @@ export function render(cv, objs) {
 
     const flat2D = scene.createGlProgram(vs,
         fs(cv.width, cv.height, defs + `return ${sceneCodeGenerator(objs)};`),
-        [VERT_POS], ['sdfs', 'iSdfOps', 'iSdfCount']);
+        [VERT_POS]);
     // scene.bindProgram(flat2D, null, {
     //     iSdfCount: elements.length,
     //     iSdfOps: ops,
