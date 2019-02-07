@@ -29,10 +29,11 @@ export class Plane extends SDF {
                 y: ny
             } = {},
         } = this;
-        return [
-            2.0, emissive, reflectivity, eta,
-            px, py, nx, ny,
-        ];
+        return `createLS(planeSDF(xy, vec2(${this.floatize(px)}, ${this.floatize(py)}), vec2(${this.floatize(nx)}, ${this.floatize(ny)})), ${this.floatize(emissive)}, ${this.floatize(reflectivity)}, ${this.floatize(eta)})`;
+        // return [
+        //     2.0, emissive, reflectivity, eta,
+        //     px, py, nx, ny,
+        // ];
     }
 }
 

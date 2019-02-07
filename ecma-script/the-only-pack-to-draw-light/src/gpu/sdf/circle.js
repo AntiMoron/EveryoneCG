@@ -31,9 +31,10 @@ export class Circle extends SDF {
             } = {},
             _radius: radius
         } = this;
-        return [
-            1.0, emissive, reflectivity, eta,
-            cx, cy, radius, 0
-        ];
+        return `createLS(circleSDF(xy, vec2(${this.floatize(cx)}, ${this.floatize(cy)}), ${this.floatize(radius)}), ${this.floatize(emissive)}, ${this.floatize(reflectivity)}, ${this.floatize(eta)})`;
+        // return [
+        //     1.0, emissive, reflectivity, eta,
+        //     cx, cy, radius, 0
+        // ];
     }
 }

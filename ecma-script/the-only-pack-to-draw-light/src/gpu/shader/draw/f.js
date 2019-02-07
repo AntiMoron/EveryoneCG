@@ -1,18 +1,18 @@
 /**
  * @author antimoron
  */
-export default function (width, height) {
+export default function (width, height, sceneCode) {
   return `
 precision highp float;
-uniform float sdfs[128];
-uniform int iSdfOps[64];
-uniform int iSdfCount; // sdf 数量
+// uniform float sdfs[128];
+// uniform int iSdfOps[64];
+// uniform int iSdfCount; // sdf 数量
 
-float N = 64.0;
-int MAX_STEP = 10;
-float MAX_DISTANCE = 4.0;
-float EPSILON = 1e-6;
-float BIAS = 1e-4;
+const float N = 64.0;
+const int MAX_STEP = 10;
+const float MAX_DISTANCE = 4.0;
+const float EPSILON = 1e-6;
+const float BIAS = 1e-4;
 
 
 // 定义一个光源
@@ -74,48 +74,37 @@ float planeSDF(vec2 xy, vec2 pxy, vec2 normal) {
     return (xy.x - pxy.x) * normal.x + (xy.y - pxy.y) * normal.y;
 }
 
-// 描述光源
-LightSource createLightSource(vec2 xy, const int index) {
-  int s = index * 16; // 一个SDF描述用16个float
-  float sd = 0.0;
-  if(sdfs[s] == 1.0) {
-    sd = circleSDF(xy, vec2(sdfs[s + 4], sdfs[s + 5]), sdfs[s + 6]);
-  } else if(sdfs[s] == 2.0) {
-    sd = planeSDF(xy, vec2(sdfs[s + 4], sdfs[s + 5]), vec2(sdfs[s + 6], sdfs[s + 7]));
-  } else if(sdfs[s] == 3.0) {
-    sd = boxSDF(xy, vec2(sdfs[s + 4], sdfs[s + 5]), sdfs[s + 8],vec2(sdfs[s + 6], sdfs[s + 7]));
-  }
-  LightSource r;
-  r.sourceDistance = sd;
-  r.emissive = sdfs[s + 1];
-  r.reflectivity = sdfs[s + 2];
-  r.eta = sdfs[s + 3];
-  return r;
+LightSource createLS(float sd, float emissive, float reflectivity, float eta) {
+  LightSource ret;
+  ret.sourceDistance = sd;
+  ret.emissive = emissive;
+  ret.reflectivity = reflectivity;
+  ret.eta = eta;
+  return ret;
 }
+
+// 描述光源
+// LightSource createLightSource(vec2 xy, const int index) {
+//   int s = index * 16; // 一个SDF描述用16个float
+//   float sd = 0.0;
+//   if(sdfs[s] == 1.0) {
+//     sd = circleSDF(xy, vec2(sdfs[s + 4], sdfs[s + 5]), sdfs[s + 6]);
+//   } else if(sdfs[s] == 2.0) {
+//     sd = planeSDF(xy, vec2(sdfs[s + 4], sdfs[s + 5]), vec2(sdfs[s + 6], sdfs[s + 7]));
+//   } else if(sdfs[s] == 3.0) {
+//     sd = boxSDF(xy, vec2(sdfs[s + 4], sdfs[s + 5]), sdfs[s + 8],vec2(sdfs[s + 6], sdfs[s + 7]));
+//   }
+//   LightSource r;
+//   r.sourceDistance = sd;
+//   r.emissive = sdfs[s + 1];
+//   r.reflectivity = sdfs[s + 2];
+//   r.eta = sdfs[s + 3];
+//   return r;
+// }
 
 
 LightSource scene(vec2 xy) {
-  LightSource ret;
-  for(int i = 0; i < iSdfCount - 1; i++) {
-    int baseIdx = i * 4;
-    int type = iSdfOps[baseIdx];
-    int fromIdx = iSdfOps[baseIdx + 1];
-    int toIdx = iSdfOps[baseIdx + 2];
-    if(i == 0) {
-      ret = createLightSource(xy, fromIdx);
-    }
-    LightSource toSd = createLightSource(xy, toIdx);
-    if(type != 0) {
-      if(type == 1) { // union
-        ret = unionOp(ret, toSd);
-      } else if(type == 2) { // intersect
-        ret = intersectOp(ret, toSd);
-      } else if(type == 3) { // subtract
-        ret = subtractOp(ret, toSd);
-      }
-    }
-  }
-  return ret;
+  ${sceneCode};
 }
 
 
@@ -155,45 +144,148 @@ vec2 gradient(vec2 xy) {
 //       eta * ixy.y - a * nxy.y);
 // }
 
+
 /**
 * ray tracing
 * @param {*} o
 * @param {*} d
 * @param {*} depth
 */
-float trace(vec2 o, vec2 d, int depth) {
+float trace0(vec2 o, vec2 d) {
   float t = .0;
   // 判断是场景内还是外，间eta注释
   float s = scene(o).sourceDistance > .0 ? 1.0 : -1.0;
-  for (int i = 0; i < MAX_STEP && t < MAX_DISTANCE; i++) {
-      vec2 xy = d * t + o;
-      LightSource sd = scene(xy);
-      sd.sourceDistance = sd.sourceDistance * s;
-      if (sd.sourceDistance < EPSILON) {
-          // 反射
-          float sum = sd.emissive;
-          if (depth < 3) {
-              float refl = sd.reflectivity;
-              if (sd.reflectivity > .0 || sd.eta > .0) {
-                  vec2 normal = gradient(xy);
-                  normal = normal * s;// 在内的话，要反转法线
-                  // normal = normalize(normal);
-                  if (sd.eta > .0) {
-                      vec2 etaRange = refract(d, normal, s < .0 ? sd.eta : 1.0 / sd.eta);
-                      sum += (1.0 - refl) * trace(xy - normal * BIAS, etaRange, depth + 1);
-                  }
-                  if (refl > .0) {
-                      vec2 refl2 = reflect(d, normal);
-                      sum += refl * trace(xy + normal * BIAS, refl2, depth + 1);
-                  }
-              }
-          }
-          return sum;
-      }
-      t += sd.sourceDistance;
+  for (int i = 0; i < MAX_STEP; i++) {
+    if(t < MAX_DISTANCE) { break; }
+    vec2 xy = d * t + o;
+    LightSource sd = scene(xy);
+    sd.sourceDistance = sd.sourceDistance * s;
+    if (sd.sourceDistance < EPSILON) {
+        // 反射
+        return sd.emissive;
+    }
+    t += sd.sourceDistance;
   }
   return .0;
 }
+
+/**
+* ray tracing
+* @param {*} o
+* @param {*} d
+* @param {*} depth
+*/
+float trace1(vec2 o, vec2 d) {
+  float t = .0;
+  // 判断是场景内还是外，间eta注释
+  float s = scene(o).sourceDistance > .0 ? 1.0 : -1.0;
+  for (int i = 0; i < MAX_STEP; i++) {
+    if(t < MAX_DISTANCE) { break; }
+    vec2 xy = d * t + o;
+    LightSource sd = scene(xy);
+    sd.sourceDistance = sd.sourceDistance * s;
+    if (sd.sourceDistance < EPSILON) {
+        // 反射
+        float sum = sd.emissive;
+        float refl = sd.reflectivity;
+        if (sd.reflectivity > .0 || sd.eta > .0) {
+            vec2 normal = gradient(xy);
+            normal = normal * s;// 在内的话，要反转法线
+            // normal = normalize(normal);
+            if (sd.eta > .0) {
+                vec2 etaRange = refract(d, normal, s < .0 ? sd.eta : 1.0 / sd.eta);
+                sum += (1.0 - refl) * trace0(xy - normal * BIAS, etaRange);
+            }
+            if (refl > .0) {
+                vec2 refl2 = reflect(d, normal);
+                sum += refl * trace0(xy + normal * BIAS, refl2);
+            }
+        }
+        return sum;
+    }
+    t += sd.sourceDistance;
+  }
+  return .0;
+}
+
+/**
+* ray tracing
+* @param {*} o
+* @param {*} d
+* @param {*} depth
+*/
+float trace2(vec2 o, vec2 d) {
+  float t = .0;
+  // 判断是场景内还是外，间eta注释
+  float s = scene(o).sourceDistance > .0 ? 1.0 : -1.0;
+  for (int i = 0; i < MAX_STEP; i++) {
+    if(t < MAX_DISTANCE) { break; }
+    vec2 xy = d * t + o;
+    LightSource sd = scene(xy);
+    sd.sourceDistance = sd.sourceDistance * s;
+    if (sd.sourceDistance < EPSILON) {
+        // 反射
+        float sum = sd.emissive;
+        float refl = sd.reflectivity;
+        if (sd.reflectivity > .0 || sd.eta > .0) {
+            vec2 normal = gradient(xy);
+            normal = normal * s;// 在内的话，要反转法线
+            // normal = normalize(normal);
+            if (sd.eta > .0) {
+                vec2 etaRange = refract(d, normal, s < .0 ? sd.eta : 1.0 / sd.eta);
+                sum += (1.0 - refl) * trace1(xy - normal * BIAS, etaRange);
+            }
+            if (refl > .0) {
+                vec2 refl2 = reflect(d, normal);
+                sum += refl * trace1(xy + normal * BIAS, refl2);
+            }
+        }
+        return sum;
+    }
+    t += sd.sourceDistance;
+  }
+  return .0;
+}
+
+/**
+* ray tracing
+* @param {*} o
+* @param {*} d
+* @param {*} depth
+*/
+float trace(vec2 o, vec2 d) {
+  float t = .0;
+  // 判断是场景内还是外，间eta注释
+  float s = scene(o).sourceDistance > .0 ? 1.0 : -1.0;
+  for (int i = 0; i < MAX_STEP; i++) {
+    if(t < MAX_DISTANCE) { break; }
+    vec2 xy = d * t + o;
+    LightSource sd = scene(xy);
+    sd.sourceDistance = sd.sourceDistance * s;
+    if (sd.sourceDistance < EPSILON) {
+        // 反射
+        float sum = sd.emissive;
+        float refl = sd.reflectivity;
+        if (sd.reflectivity > .0 || sd.eta > .0) {
+            vec2 normal = gradient(xy);
+            normal = normal * s;// 在内的话，要反转法线
+            // normal = normalize(normal);
+            if (sd.eta > .0) {
+                vec2 etaRange = refract(d, normal, s < .0 ? sd.eta : 1.0 / sd.eta);
+                sum += (1.0 - refl) * trace2(xy - normal * BIAS, etaRange);
+            }
+            if (refl > .0) {
+                vec2 refl2 = reflect(d, normal);
+                sum += refl * trace2(xy + normal * BIAS, refl2);
+            }
+        }
+        return sum;
+    }
+    t += sd.sourceDistance;
+  }
+  return .0;
+}
+
 // 随机数
 // 从这抄的： https://thebookofshaders.com/10/
 float rand (vec2 st) {
@@ -212,7 +304,7 @@ float sample(vec2 xy) {
   float sum = .0;
   for (float i = .0; i < N; i += 1.0) {
       float a = 6.2831852 * (i + rand(xy)) / N;
-      sum += trace(xy, vec2(cos(a), sin(a)), 0);
+      sum += trace(xy, vec2(cos(a), sin(a)));
   }
   return sum / N;
 }

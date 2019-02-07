@@ -30,10 +30,11 @@ export class Rect extends SDF {
             },
             _theta: theta,
         } = this;
-        return [
-            3.0, emissive, reflectivity, eta,
-            cx, cy, sx, sy,
-            theta, 0, 0, 0
-        ];
+        return `createLS(boxSDF(xy, vec2(${this.floatize(cx)}, ${this.floatize(cy)}), ${this.floatize(theta)}, vec2(${this.floatize(sx)}, ${this.floatize(sy)})), ${this.floatize(emissive)}, ${this.floatize(reflectivity)}, ${this.floatize(eta)})`;
+        // return [
+        //     3.0, emissive, reflectivity, eta,
+        //     cx, cy, sx, sy,
+        //     theta, 0, 0, 0
+        // ];
     }
 }

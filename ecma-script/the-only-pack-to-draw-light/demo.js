@@ -1,4 +1,4 @@
-import { OPDrawLight } from './dist/index.min.js';
+import { OPDrawLight } from './index';
 
 const {
     gpu: {

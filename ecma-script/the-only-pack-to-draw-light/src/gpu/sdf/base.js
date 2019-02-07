@@ -18,6 +18,11 @@ export class SDF {
     // 传{ t: 'u(nion) | i(ntersect) | s(ubtract)', to: SDF}
     _opQueue = [];
 
+    floatize = (n) => {
+        let nn = n + '';
+        return nn.indexOf('.') >= 0 ? nn : nn + '.0';
+    }
+
     /**
      * 合并两个光
      */
