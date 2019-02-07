@@ -11,15 +11,17 @@ npm i -S the-only-one-pack-to-draw-light
 ```javascript
 import { OPDrawLight } from 'the-only-one-pack-to-draw-light';
 
+// 要用cpu绘图改为true
+const useCPU = false;
+const Kit = useCPU ? OPDrawLight.cpu : OPDrawLight.gpu;
+
 const {
-    cpu: {
-        SDF: {
-            Circle,
-            Plane,
-        },
-        render
-    }
-} = OPDrawLight;
+    SDF: {
+        Circle,
+        Plane,
+    },
+    render
+} = Kit;
 
 const c = new Circle({
     emissive: 20,
