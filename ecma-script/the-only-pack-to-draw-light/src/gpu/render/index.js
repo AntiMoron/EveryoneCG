@@ -132,10 +132,10 @@ export function render(cv, objs) {
     const defs = elements.map((o, idx) => {
         return `LightSource a${idx} = ${o.gpuDesc};`;
     }).join('\n');
-    console.log(fs(cv.width, cv.height, defs + `return ${sceneCodeGenerator(objs)};`));
-
+    const fragShaderSouce = defs + `\nreturn ${sceneCodeGenerator(objs)};`;
+    console.log(fragShaderSouce);
     const flat2D = scene.createGlProgram(vs,
-        fs(cv.width, cv.height, defs + `return ${sceneCodeGenerator(objs)};`),
+        fs(cv.width, cv.height, fragShaderSouce),
         [VERT_POS]);
     // scene.bindProgram(flat2D, null, {
     //     iSdfCount: elements.length,

@@ -9,8 +9,8 @@ precision highp float;
 // uniform int iSdfCount; // sdf 数量
 
 const float N = 64.0;
-const int MAX_STEP = 10;
-const float MAX_DISTANCE = 4.0;
+const int MAX_STEP = 64;
+const float MAX_DISTANCE = 10.0;
 const float EPSILON = 1e-6;
 const float BIAS = 1e-4;
 
@@ -83,30 +83,9 @@ LightSource createLS(float sd, float emissive, float reflectivity, float eta) {
   return ret;
 }
 
-// 描述光源
-// LightSource createLightSource(vec2 xy, const int index) {
-//   int s = index * 16; // 一个SDF描述用16个float
-//   float sd = 0.0;
-//   if(sdfs[s] == 1.0) {
-//     sd = circleSDF(xy, vec2(sdfs[s + 4], sdfs[s + 5]), sdfs[s + 6]);
-//   } else if(sdfs[s] == 2.0) {
-//     sd = planeSDF(xy, vec2(sdfs[s + 4], sdfs[s + 5]), vec2(sdfs[s + 6], sdfs[s + 7]));
-//   } else if(sdfs[s] == 3.0) {
-//     sd = boxSDF(xy, vec2(sdfs[s + 4], sdfs[s + 5]), sdfs[s + 8],vec2(sdfs[s + 6], sdfs[s + 7]));
-//   }
-//   LightSource r;
-//   r.sourceDistance = sd;
-//   r.emissive = sdfs[s + 1];
-//   r.reflectivity = sdfs[s + 2];
-//   r.eta = sdfs[s + 3];
-//   return r;
-// }
-
-
 LightSource scene(vec2 xy) {
   ${sceneCode};
 }
-
 
 // 说是计算法线
 vec2 gradient(vec2 xy) {
