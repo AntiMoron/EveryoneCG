@@ -4,7 +4,7 @@
 npm i -S the-only-one-pack-to-draw-light
 ```
 
-你需要的唯一的一个包去CPU画光，[有卡爆风险]
+你需要的唯一的一个包去CPU/GPU画光
 
 用法如下:
 
