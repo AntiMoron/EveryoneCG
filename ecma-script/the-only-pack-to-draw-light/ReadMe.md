@@ -21,6 +21,7 @@ const {
     SDF: {
         Circle,
         Plane,
+        Rect,
     },
     render
 } = Kit;
