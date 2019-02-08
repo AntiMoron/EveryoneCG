@@ -6,6 +6,8 @@ npm i -S the-only-one-pack-to-draw-light
 
 你需要的唯一的一个包去CPU/GPU画光
 
+![](https://user-images.githubusercontent.com/6587734/52172954-41527e80-27b5-11e9-95d3-b3d1756743cc.png)
+
 用法如下:
 
 ```javascript
