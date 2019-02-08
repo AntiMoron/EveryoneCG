@@ -10,3 +10,6 @@
 你想5分钟画光，可以直接以npm集成的方式进行（恶俗）
 详情查看：
 https://github.com/AntiMoron/CopyLight2D/tree/master/ecma-script/the-only-pack-to-draw-light
+
+
+![](https://user-images.githubusercontent.com/6587734/52172954-41527e80-27b5-11e9-95d3-b3d1756743cc.png)
