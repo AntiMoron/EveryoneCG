@@ -157,11 +157,13 @@ export function render(cv, objs, opts) {
     const W = cv.width, H = cv.height;
     const imgData = context.createImageData(W, H);
 
-    const { N, MAX_STEP, MAX_DISTANCE } = opts || {
+    let { N, MAX_STEP, MAX_DISTANCE } = opts || {
         N: 64,
         MAX_STEP: 64,
         MAX_DISTANCE: 10.0,
     };
+
+    N = +N; MAX_STEP = +MAX_STEP; MAX_DISTANCE = +MAX_DISTANCE;
 
     for (let i = 0; i < H; i++) {
         for (let j = 0; j < W; j++) {

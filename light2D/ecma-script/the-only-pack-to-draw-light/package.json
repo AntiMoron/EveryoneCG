@@ -1,6 +1,6 @@
 {
   "name": "the-only-one-pack-to-draw-light",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "你需要的唯一的一个包去CPU画光，~[有卡爆风险]~ 已支持GPU渲染不会卡爆了",
   "main": "dist/index.min.js",
   "private": false,
