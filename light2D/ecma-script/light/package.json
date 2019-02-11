@@ -5,7 +5,7 @@
   "main": "index.js",
   "private": false,
   "scripts": {},
-  "author": "antimoron",
+  "author": "anti2moron@gmail.com",
   "license": "GPL",
   "dependencies": {
     "the-only-one-pack-to-draw-light": "^1.0.5"
