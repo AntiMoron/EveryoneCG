@@ -45,3 +45,27 @@ const j = new Plane({
 // 渲染
 render(document.getElementById('cv'), c.union(i.intersect(j)));
 ```
+
+#### render参数
+
+##### cv: HTMLCanvasElement, Canvas DOM
+
+##### objs SDF树，根据SDF构建场景
+
+SDF类型
+
+- Circle(props, center, radius)
+- Rect(props, center, theta, s)
+- Plane(props, pxy, normal)
+
+SDF 方法
+
+- union: 合并两个光
+- intersect：交集两个光
+- subtract：减法两个光 （注意没有交换律）
+
+##### opts: 渲染参数
+
+- N 默认64.0, 代表采样率，越高越准确
+- MAX_STEP 最大步进次数，默认'64',
+- MAX_DISTANCE 最大步进距离，根据场景实际情况定，默认'10.0'

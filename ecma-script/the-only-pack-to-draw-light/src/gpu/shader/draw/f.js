@@ -1,16 +1,16 @@
 /**
  * @author antimoron
  */
-export default function (width, height, sceneCode) {
+export default function (width, height, sceneCode, N = '64.0', MAX_STEP = '64', MAX_DISTANCE = '10.0') {
   return `
 precision highp float;
 // uniform float sdfs[128];
 // uniform int iSdfOps[64];
 // uniform int iSdfCount; // sdf 数量
 
-const float N = 64.0;
-const int MAX_STEP = 64;
-const float MAX_DISTANCE = 10.0;
+const float N = ${N};
+const int MAX_STEP = ${MAX_STEP};
+const float MAX_DISTANCE = ${MAX_DISTANCE};
 const float EPSILON = 1e-6;
 const float BIAS = 1e-4;
 

@@ -1,8 +1,8 @@
 import { addf2, mulf2 } from '../util/float2';
 
-let N = 32;
-let MAX_STEP = 10;
-let MAX_DISTANCE = 4.0;
+// let N = 32;
+// let MAX_STEP = 10;
+// let MAX_DISTANCE = 4.0;
 let EPSILON = 1e-6;
 let BIAS = 1e-4;
 
@@ -90,7 +90,7 @@ function refract(ixy, nxy, eta) {
  * @param {*} objs 要渲染的对象
  * @param {*} depth
  */
-function trace(o, d, objs, depth) {
+function trace(o, d, objs, depth, MAX_STEP, MAX_DISTANCE) {
     let t = .0;
     // 判断是场景内还是外，间eta注释
     const s = scene(o, objs).sourceDistance > .0 ? 1 : -1;
@@ -109,11 +109,11 @@ function trace(o, d, objs, depth) {
                     // normal = normalize(normal);
                     if (sd.eta > .0) {
                         const etaRange = refract(d, normal, s < .0 ? sd.eta : 1.0 / sd.eta);
-                        sum += (1.0 - refl) * trace(xy - normal * BIAS, etaRange, objs, depth + 1);
+                        sum += (1.0 - refl) * trace(xy - normal * BIAS, etaRange, objs, depth + 1, MAX_STEP, MAX_DISTANCE);
                     }
                     if (refl > .0) {
                         const refl2 = reflect(d, normal);
-                        sum += refl * trace(xy + normal * BIAS, refl2, objs, depth + 1);
+                        sum += refl * trace(xy + normal * BIAS, refl2, objs, depth + 1, MAX_STEP, MAX_DISTANCE);
                     }
                 }
             }
@@ -130,11 +130,11 @@ function trace(o, d, objs, depth) {
  * @param {*} xy x,y像素点
  * @param {Array} objs 填入一堆SDF对象
  */
-function sample(xy, objs) {
+function sample(xy, objs, N, MAX_STEP, MAX_DISTANCE) {
     let sum = .0;
     for (let i = 0; i < N; i++) {
         let a = Math.PI * 2.0 * (i + Math.random()) / N;
-        sum += trace(xy, { x: Math.cos(a), y: Math.sin(a) }, objs, 0);
+        sum += trace(xy, { x: Math.cos(a), y: Math.sin(a) }, objs, 0, MAX_STEP, MAX_DISTANCE);
     }
     return sum / 64.0;
 }
@@ -144,8 +144,9 @@ function sample(xy, objs) {
  * 给一个canvas和SDF对象，画出值
  * @param {*} cv HTML canvas element
  * @param {*} objs SDF对象树
+ * @param {*} opts 参数
  */
-export function render(cv, objs) {
+export function render(cv, objs, opts) {
     if (!cv) {
         throw new Error('canvas element not available.');
     }
@@ -156,10 +157,16 @@ export function render(cv, objs) {
     const W = cv.width, H = cv.height;
     const imgData = context.createImageData(W, H);
 
+    const { N, MAX_STEP, MAX_DISTANCE } = opts || {
+        N: 64,
+        MAX_STEP: 64,
+        MAX_DISTANCE: 10.0,
+    };
+
     for (let i = 0; i < H; i++) {
         for (let j = 0; j < W; j++) {
             const idx = i * W + j;
-            const gray = Math.floor(sample({ x: 1.0 * j / W, y: 1.0 * i / H }, objs) * 255.0, 0);
+            const gray = Math.floor(sample({ x: 1.0 * j / W, y: 1.0 * i / H }, objs) * 255.0, 0, N, MAX_STEP, MAX_DISTANCE);
             imgData.data[idx * 4] = gray;
             imgData.data[idx * 4 + 1] = gray;
             imgData.data[idx * 4 + 2] = gray;

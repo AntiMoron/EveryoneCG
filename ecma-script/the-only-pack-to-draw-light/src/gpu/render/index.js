@@ -7,8 +7,9 @@ import { VERT_POS } from '../util/program';
  * 给一个canvas和SDF对象，画出值
  * @param {*} cv HTML canvas element
  * @param {*} objs SDF对象树
+ * @param {object} opts 属性
  */
-export function render(cv, objs) {
+export function render(cv, objs, opts) {
     if (!cv) {
         throw new Error('canvas element not available.');
     }
@@ -132,16 +133,16 @@ export function render(cv, objs) {
     const defs = elements.map((o, idx) => {
         return `LightSource a${idx} = ${o.gpuDesc};`;
     }).join('\n');
-    const fragShaderSouce = defs + `\nreturn ${sceneCodeGenerator(objs)};`;
-    console.log(fragShaderSouce);
-    const flat2D = scene.createGlProgram(vs,
-        fs(cv.width, cv.height, fragShaderSouce),
+    const fragShaderSoucePart = defs + `\nreturn ${sceneCodeGenerator(objs)};`;
+    const { N, MAX_STEP, MAX_DISTANCE } = opts || {
+        N: '64.0',
+        MAX_STEP: '64',
+        MAX_DISTANCE: '10.0',
+    };
+    const fragShaderSouce = fs(cv.width, cv.height, fragShaderSoucePart, N, MAX_STEP, MAX_DISTANCE);
+    console.log(fragShaderSoucePart);
+    const flat2D = scene.createGlProgram(vs, fragShaderSouce,
         [VERT_POS]);
-    // scene.bindProgram(flat2D, null, {
-    //     iSdfCount: elements.length,
-    //     iSdfOps: ops,
-    //     sdfs,
-    // });
     scene.bindProgram(flat2D);
     const screenRect = scene.createVertices([
         -1.0, 1.0,
