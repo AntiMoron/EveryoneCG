@@ -9,5 +9,6 @@
   "license": "GPL",
   "dependencies": {
     "the-only-one-pack-to-draw-light": "^1.0.5"
-  }
+  },
+  "homepage": "https://github.com/AntiMoron/CopyLight2D/tree/master/light2D/ecma-script/light"
 }
