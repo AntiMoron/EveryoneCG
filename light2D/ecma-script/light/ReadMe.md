@@ -1,4 +1,4 @@
-### Light
+### Light-Render
 
 Nice 2D light rendering with pretty good ray tracing effect. Providing both CPU & GPU ways.
 
@@ -13,7 +13,7 @@ Thanks for [Miloyip](https://github.com/miloyip)'s sharing. Also he's the author
 ### Install
 
 ```bash
-npm i -S light
+npm i -S light-render
 ```
 
 ![](https://user-images.githubusercontent.com/6587734/52172954-41527e80-27b5-11e9-95d3-b3d1756743cc.png)
@@ -21,11 +21,11 @@ npm i -S light
 A quick glance at `Light` with a short demo:
 
 ```javascript
-import { Light } from 'light';
+import { Light } from 'light-render';
 
 // Whether to render in CPU.
 const useCPU = false;
-const Kit = useCPU ? OPDrawLight.cpu : OPDrawLight.gpu;
+const Kit = useCPU ? Light.cpu : Light.gpu;
 
 const {
     SDF: {

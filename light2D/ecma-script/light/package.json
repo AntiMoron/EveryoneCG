@@ -1,11 +1,12 @@
 {
-  "name": "light",
+  "name": "light-render",
   "version": "1.0.0",
   "description": "Nice 2D light rendering with pretty good ray tracing effect. Providing both CPU & GPU ways.",
   "main": "index.js",
+  "private": false,
   "scripts": {},
   "author": "antimoron",
-  "license": "ISC",
+  "license": "GPL",
   "dependencies": {
     "the-only-one-pack-to-draw-light": "^1.0.5"
   }
