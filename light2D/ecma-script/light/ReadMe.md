@@ -8,7 +8,7 @@ Features included in this package:
 - Ray Tracing
 - Jittered sampling
 
-Thanks for [Miloyip](https://github.com/miloyip)'s sharing. Also he's the author of [RapidJson](https://github.com/Tencent/rapidjson) which is a really effecient json parsing library.
+Thanks for [Miloyip](https://github.com/miloyip)'s [sharing](https://zhuanlan.zhihu.com/p/30745861). Also he's the author of [RapidJson](https://github.com/Tencent/rapidjson) which is a really effecient json parsing library.
 
 ### Install
 
