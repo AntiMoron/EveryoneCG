@@ -1,6 +1,6 @@
 {
   "name": "light-render",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Nice 2D light rendering with pretty good ray tracing effect. Providing both CPU & GPU ways.",
   "main": "index.js",
   "private": false,
